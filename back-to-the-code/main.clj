@@ -86,15 +86,40 @@
 (defn visited-yonder? [board]
   (visited? board 34 19))
 
-; target-cell returns the cell that the player would
-; be best served by moving towards
-(defn target-cell [game opponents board]
-  (debug "visited-origin" (visited-origin? board))
+(defn is-mine? [cell]
+  (= \0 cell))
+
+(defn surrounded-by-me? [row]
+  (and (is-mine? (first row))
+       (is-mine? (last  row))))
+
+(defn is-board-looped? [board]
+  (let [firstRow (first board)
+        lastRow  (last  board)]
+  (and (every? is-mine? firstRow)
+       (every? is-mine? lastRow)
+       (every? surrounded-by-me? board))))
+
+(defn loop-board [board]
   (if (not (visited-origin? board))
     (visit-origin)
     (if (not (visited-yonder? board))
       (visit-yonder)
       (visit-origin))))
+
+; target-cell returns the cell that the player would
+; be best served by moving towards
+(defn target-cell [game opponents board]
+  (if (not (is-board-looped? board))
+    (loop-board board)
+    (visit-origin)))
+  ; (debug "visited-origin" (visited-origin? board))
+  ; (debug "is-looped" (is-board-looped? board))
+  ; (if (not (visited-origin? board))
+  ;   (visit-origin)
+  ;   (if (not (visited-yonder? board))
+  ;     (visit-yonder)
+  ;     (visit-origin))))
 
 (defn -main [& args]
   (let [opponentCount (read-string (read-line))]
