@@ -2,6 +2,28 @@
   (:require [clojure.test :refer :all]
             [Player :refer :all]))
 
+(deftest cell-owned-by-me?-test
+  (testing "When called with '0'"
+    (is (cell-owned-by-me? \0)))
+  (testing "When called with '.'"
+    (is (not (cell-owned-by-me? \.)))))
+
+(deftest edge-length-up-test
+  (testing "When called with an initial board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "....."]]
+      (is (= 1 (edge-length-up game board)))))
+
+  (testing "When called with a normal 2nd turn board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "..0.."]]
+      (is (= 2 (edge-length-up game board)))))
+  )
+
 (deftest go-down-test
   (testing "When called with 0,0"
     (is (= {:x 0, :y 1} (go-down {:x 0, :y 0}))))
@@ -26,11 +48,28 @@
   (testing "When called with 4,4"
     (is (= {:x 4, :y 3} (go-up {:x 4, :y 4})))))
 
-(deftest cell-owned-by-me?-test
-  (testing "When called with '0'"
-    (is (cell-owned-by-me? \0)))
-  (testing "When called with '.'"
-    (is (not (cell-owned-by-me? \.)))))
+(deftest going-up?-test
+  (testing "When called with an initial board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "....."]]
+      (is (going-up? game board))))
+
+  ; (testing "When called with a normal 2nd turn board state"
+  ;   (let [game  {:x 2, :y 1}
+  ;         board ["....."
+  ;                "..0.."
+  ;                "..0.."]]
+  ;     (is (not (going-up? game board)))))
+)
+
+(deftest max-full-edge-length-test
+  (testing "When called with ['.........']"
+    (is (= 0 (max-full-edge-length ["........."]))))
+
+  (testing "When called with ['.........', '...00....']"
+    (is (= 2 (max-full-edge-length ["........." "...00...."])))))
 
 (deftest number-owned-test
   (testing "When called with '.....0....'"
@@ -45,10 +84,3 @@
     (is (not (partially-owned? "...1....."))))
   (testing "When called with '.....0...'"
     (is (partially-owned? ".....0..."))))
-
-(deftest max-full-edge-length-test
-  (testing "When called with ['.........']"
-    (is (= 0 (max-full-edge-length ["........."]))))
-
-  (testing "When called with ['.........', '...00....']"
-    (is (= 2 (max-full-edge-length ["........." "...00...."])))))

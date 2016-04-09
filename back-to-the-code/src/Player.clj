@@ -99,11 +99,6 @@
   { :x (:x game)
     :y (- (:y game) 1)})
 
-(defn going-down? [game board] true)
-(defn going-left? [game board] true)
-(defn going-right? [game board] true)
-(defn going-up? [game board] true)
-
 ; number-owned returns the number of cells
 ; owned by the player in a given row
 (defn number-owned [row]
@@ -123,6 +118,27 @@
 
 (defn target-edge-length [board]
   (+ 1 (max-full-edge-length board)))
+
+(defn extract-column [n board]
+  (map #(nth % n) board))
+
+; edge-length-up calculates the current
+; upward movement edge length
+(defn edge-length-up [game board]
+  (count
+    (filter
+      cell-owned-by-me?
+      (extract-column (:x game) board))))
+
+(defn up-edge-length [])
+(defn going-down? [game board] true)
+(defn going-left? [game board] true)
+(defn going-right? [game board] true)
+
+(defn going-up? [game board]
+  (debug "edge-length-up" (edge-length-up game board))
+  (debug "target-edge-length" (target-edge-length board))
+  (< (edge-length-up game board) (target-edge-length board)))
 
 (defn spiral-outwards [game board]
   (cond
