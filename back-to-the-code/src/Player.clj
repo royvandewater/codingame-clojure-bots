@@ -65,52 +65,44 @@
 (defn parse-input [input]
   [(parse-game input) (parse-opponents input) (parse-board input)])
 
-; is-origin returns true if the x & y coordinates
-; are 0 & 0. false otherwise
-(defn is-origin [coords]
-  (and (= 0 (coords :x))
-       (= 0 (coords :y))))
-
 (defn visited? [board x y]
   (let [row  (nth board y)
         cell (nth row x)]
         (debug "cell" cell x y)
         (= \0 cell)))
 
-(defn visit-origin [] {:x 0  :y 0})
-
-(defn visit-yonder [] {:x 34 :y 19})
-
-(defn visited-origin? [board]
-  (visited? board 0 0))
-
-(defn visited-yonder? [board]
-  (visited? board 34 19))
-
-(defn is-mine? [cell]
-  (= \0 cell))
-
-(defn surrounded-by-me? [row]
-  (and (is-mine? (first row))
-       (is-mine? (last  row))))
-
-(defn is-board-looped? [board]
-  (let [firstRow (first board)
-        lastRow  (last  board)]
-  (and (every? is-mine? firstRow)
-       (every? is-mine? lastRow)
-       (every? surrounded-by-me? board))))
-
-(defn loop-board [board]
-  (if (not (visited-origin? board))
-    (visit-origin)
-    (if (not (visited-yonder? board))
-      (visit-yonder)
-      (visit-origin))))
-
 ; cell-owned-by-me? returns true if the cell
 ; is owned by me (is equal to \0)
 (defn cell-owned-by-me? [cell] (= cell \0))
+
+; go-down returns the cell just one down from
+; the one passed in
+(defn go-down [game]
+  { :x (:x game)
+    :y (+ (:y game) 1)})
+
+; go-left returns the cell just one left from
+; the one passed in
+(defn go-left [game]
+  { :x (- (:x game) 1)
+    :y (:y game)})
+
+; go-right returns the cell just one right from
+; the one passed in
+(defn go-right [game]
+  { :x (+ (:x game) 1)
+    :y (:y game)})
+
+; go-up returns the cell just one up from
+; the one passed in
+(defn go-up [game]
+  { :x (:x game)
+    :y (- (:y game) 1)})
+
+(defn going-down? [game board] true)
+(defn going-left? [game board] true)
+(defn going-right? [game board] true)
+(defn going-up? [game board] true)
 
 ; number-owned returns the number of cells
 ; owned by the player in a given row
@@ -127,12 +119,21 @@
       (empty? rowsOwnedByMe) 0
       :else (apply min (map number-owned rowsOwnedByMe)))))
 
+(defn stay-here [game])
+
 (defn target-edge-length [board]
   (+ 1 (max-full-edge-length board)))
 
 (defn spiral-outwards [game board]
-  (let [targetEdgeLength (target-edge-length board)]
-    (debug "targetEdgeLength" targetEdgeLength)))
+  (cond
+    (going-up? game board) (go-up game)
+    (going-right? game board) (go-right game)
+    (going-down? game board) (go-down game)
+    (going-left? game board) (go-left)
+    :else (stay-here game)))
+  ; (let [targetEdgeLength (target-edge-length board)]
+  ;   (debug "targetEdgeLength" targetEdgeLength)
+  ;   (visit-origin)))
 
 ; ........
 ; ...0....
