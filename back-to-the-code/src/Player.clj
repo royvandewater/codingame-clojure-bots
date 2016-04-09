@@ -122,13 +122,10 @@
 (defn partially-owned? [row] (some cell-owned-by-me? row))
 
 (defn max-full-edge-length [board]
-  (debug "the board")
-  (debug-board (filter partially-owned? board))
-  (debug "owned" (map number-owned (filter partially-owned? board)))
-  (debug "min" (map type (map number-owned (filter partially-owned? board))))
-  (min
-    (map number-owned (filter partially-owned? board)))
-  1)
+  (let [rowsOwnedByMe (filter partially-owned? board)]
+    (cond
+      (empty? rowsOwnedByMe) 0
+      :else (apply min (map number-owned rowsOwnedByMe)))))
 
 (defn target-edge-length [board]
   (+ 1 (max-full-edge-length board)))
