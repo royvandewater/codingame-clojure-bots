@@ -45,6 +45,13 @@
                  "..00."
                  "..0.."]]
       (is (= 2 (edge-length-right game board)))))
+
+  (testing "When called with a normal 4th turn board state"
+    (let [game  {:x 3, :y 2}
+          board ["....."
+                 "..00."
+                 "..00."]]
+      (is (= 2 (edge-length-right game board)))))
   )
 
 (deftest edge-length-up-test
@@ -158,6 +165,13 @@
           board ["....."
                  "..00."
                  "..0.."]]
+      (is (not (going-right? game board)))))
+
+  (testing "When called with a normal 4th turn board state"
+    (let [game  {:x 3, :y 2}
+          board ["....."
+                 "..00."
+                 "..00."]]
       (is (not (going-right? game board)))))
 )
 
