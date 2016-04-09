@@ -122,6 +122,14 @@
 (defn extract-column [n board]
   (map #(nth % n) board))
 
+; edge-length-right calculates the current
+; rightward movement edge length
+(defn edge-length-right [game board]
+  (count
+    (filter
+      cell-owned-by-me?
+      (nth board (:y game)))))
+
 ; edge-length-up calculates the current
 ; upward movement edge length
 (defn edge-length-up [game board]
@@ -131,13 +139,17 @@
       (extract-column (:x game) board))))
 
 (defn up-edge-length [])
-(defn going-down? [game board] true)
-(defn going-left? [game board] true)
-(defn going-right? [game board] true)
+
+(defn going-down? [game board]
+  (< (edge-length-up game board) (+ 1 (target-edge-length board))))
+
+(defn going-left? [game board] true
+  (< (edge-length-right game board) (target-edge-length board)))
+
+(defn going-right? [game board]
+  (< (edge-length-right game board) (target-edge-length board)))
 
 (defn going-up? [game board]
-  (debug "edge-length-up" (edge-length-up game board))
-  (debug "target-edge-length" (target-edge-length board))
   (< (edge-length-up game board) (target-edge-length board)))
 
 (defn spiral-outwards [game board]

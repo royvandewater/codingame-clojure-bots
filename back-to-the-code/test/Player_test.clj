@@ -8,6 +8,22 @@
   (testing "When called with '.'"
     (is (not (cell-owned-by-me? \.)))))
 
+(deftest edge-length-right-test
+  (testing "When called with a normal 2nd turn board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "..0.."]]
+      (is (= 1 (edge-length-right game board)))))
+
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
+                 "..0.."]]
+      (is (= 2 (edge-length-right game board)))))
+  )
+
 (deftest edge-length-up-test
   (testing "When called with an initial board state"
     (let [game  {:x 2, :y 1}
@@ -48,6 +64,73 @@
   (testing "When called with 4,4"
     (is (= {:x 4, :y 3} (go-up {:x 4, :y 4})))))
 
+(deftest going-down?-test
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
+                 "..0.."]]
+      (is (going-down? game board))))
+
+  (testing "When called with a normal 4th turn board state"
+    (let [game  {:x 3, :y 2}
+          board ["....."
+                 "..00."
+                 "..00."
+                 "....."]]
+      (is (going-down? game board))))
+
+  (testing "When called with a normal 5th turn board state"
+    (let [game  {:x 3, :y 3}
+          board ["....."
+                 "..00."
+                 "..00."
+                 "...0."]]
+      (is (not (going-down? game board)))))
+)
+
+(deftest going-left?-test
+  (testing "When called with a normal 5th turn board state"
+    (let [game  {:x 3, :y 3}
+          board ["....."
+                 "..00."
+                 "..00."
+                 "...0."]]
+      (is (going-left? game board))))
+
+  (testing "When called with a normal 6th turn board state"
+    (let [game  {:x 2, :y 3}
+          board ["....."
+                 "..00."
+                 "..00."
+                 "..00."]]
+      (is (going-left? game board))))
+
+  (testing "When called with a normal 7th turn board state"
+    (let [game  {:x 1, :y 3}
+          board ["....."
+                 "..00."
+                 "..00."
+                 ".000."]]
+      (is (not (going-left? game board)))))
+)
+
+(deftest going-right?-test
+  (testing "When called with a normal 2nd turn board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "..0.."]]
+      (is (going-right? game board))))
+
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
+                 "..0.."]]
+      (is (not (going-right? game board)))))
+)
+
 (deftest going-up?-test
   (testing "When called with an initial board state"
     (let [game  {:x 2, :y 1}
@@ -56,12 +139,12 @@
                  "....."]]
       (is (going-up? game board))))
 
-  ; (testing "When called with a normal 2nd turn board state"
-  ;   (let [game  {:x 2, :y 1}
-  ;         board ["....."
-  ;                "..0.."
-  ;                "..0.."]]
-  ;     (is (not (going-up? game board)))))
+  (testing "When called with a normal 2nd turn board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "..0.."]]
+      (is (not (going-up? game board)))))
 )
 
 (deftest max-full-edge-length-test
