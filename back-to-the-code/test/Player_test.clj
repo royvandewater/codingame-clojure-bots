@@ -8,6 +8,29 @@
   (testing "When called with '.'"
     (is (not (cell-owned-by-me? \.)))))
 
+(deftest edge-length-down-test
+  (testing "When called with an initial board state"
+    (let [game  {:x 2, :y 1}
+          board ["....."
+                 "..0.."
+                 "....."]]
+      (is (= 1 (edge-length-down game board)))))
+
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
+                 "..0.."]]
+      (is (= 1 (edge-length-down game board)))))
+
+  (testing "When called with a normal 4th turn board state"
+    (let [game  {:x 3, :y 2}
+          board ["....."
+                 "..00."
+                 "..00."]]
+      (is (= 2 (edge-length-up game board)))))
+  )
+
 (deftest edge-length-right-test
   (testing "When called with a normal 2nd turn board state"
     (let [game  {:x 2, :y 1}
@@ -36,6 +59,13 @@
     (let [game  {:x 2, :y 1}
           board ["....."
                  "..0.."
+                 "..0.."]]
+      (is (= 2 (edge-length-up game board)))))
+
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
                  "..0.."]]
       (is (= 2 (edge-length-up game board)))))
   )
@@ -143,6 +173,13 @@
     (let [game  {:x 2, :y 1}
           board ["....."
                  "..0.."
+                 "..0.."]]
+      (is (not (going-up? game board)))))
+
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
                  "..0.."]]
       (is (not (going-up? game board)))))
 )

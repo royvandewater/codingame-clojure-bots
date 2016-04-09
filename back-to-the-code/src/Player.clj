@@ -12,6 +12,11 @@
 (defn debug-board [board]
   (doall (map debug board)))
 
+; debug-cell prints a cell to standard error
+; in the format "{x: <x>, y: <y>}"
+(defn debug-cell [msg cell]
+  (debug msg (format "{x: %s, y: %s}" (:x cell) (:y cell))))
+
 (defn read-one-line [i]
   (read-line))
 
@@ -41,8 +46,9 @@
 ; are metadata about the current game state and builds
 ; a hash-map with the relevant data
 (defn parse-game [input]
-  (let [round  (nth input 1)
-        player (nth input 2)
+  (debug "parse-game" input)
+  (let [round  (nth input 0)
+        player (nth input 1)
         [x y backInTimeLeft] (str/split player #"\s")]
   { :game-round        (read-string round)
     :x                 (read-string x)
@@ -68,7 +74,6 @@
 (defn visited? [board x y]
   (let [row  (nth board y)
         cell (nth row x)]
-        (debug "cell" cell x y)
         (= \0 cell)))
 
 ; cell-owned-by-me? returns true if the cell
@@ -78,24 +83,28 @@
 ; go-down returns the cell just one down from
 ; the one passed in
 (defn go-down [game]
+  ; (debug "going-down")
   { :x (:x game)
     :y (+ (:y game) 1)})
 
 ; go-left returns the cell just one left from
 ; the one passed in
 (defn go-left [game]
+  ; (debug "going-left")
   { :x (- (:x game) 1)
     :y (:y game)})
 
 ; go-right returns the cell just one right from
 ; the one passed in
 (defn go-right [game]
+  ; (debug "going-right")
   { :x (+ (:x game) 1)
     :y (:y game)})
 
 ; go-up returns the cell just one up from
 ; the one passed in
 (defn go-up [game]
+  ; (debug "going-up")
   { :x (:x game)
     :y (- (:y game) 1)})
 
@@ -122,6 +131,22 @@
 (defn extract-column [n board]
   (map #(nth % n) board))
 
+(defn down-column [board]
+  (let [row (first (filter partially-owned? board))]
+    (.lastIndexOf (seq row) \0)))
+
+(defn up-column [board]
+  (let [row (first (filter partially-owned? board))]
+    (.indexOf (seq row) \0)))
+
+; edge-length-down calculates the current
+; downward movement edge length
+(defn edge-length-down [game board]
+  (count
+    (filter
+      cell-owned-by-me?
+      (extract-column (down-column board) board))))
+
 ; edge-length-right calculates the current
 ; rightward movement edge length
 (defn edge-length-right [game board]
@@ -136,12 +161,12 @@
   (count
     (filter
       cell-owned-by-me?
-      (extract-column (:x game) board))))
+      (extract-column (up-column board) board))))
 
 (defn up-edge-length [])
 
 (defn going-down? [game board]
-  (< (edge-length-up game board) (+ 1 (target-edge-length board))))
+  (< (edge-length-down game board) (+ 1 (target-edge-length board))))
 
 (defn going-left? [game board] true
   (< (edge-length-right game board) (target-edge-length board)))
@@ -153,6 +178,7 @@
   (< (edge-length-up game board) (target-edge-length board)))
 
 (defn spiral-outwards [game board]
+  ; (debug-cell game)
   (cond
     (going-up? game board) (go-up game)
     (going-right? game board) (go-right game)
@@ -178,5 +204,7 @@
       (let [input (read-n-lines (number-of-lines opponentCount))
            [game opponents board] (parse-input input)
            cell   (target-cell game opponents board)]
-          ;  (debug-board board)
-           (println (format "%s %s" (cell :x) (cell :y)))))))
+           (debug-cell "me" game)
+           (debug-cell "target" cell)
+          ;  (println (format "%s %s" 4 3))))))
+           (println (format "%s %s" (:x cell) (:y cell)))))))
