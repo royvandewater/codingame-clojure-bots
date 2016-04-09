@@ -78,6 +78,7 @@
         (= \0 cell)))
 
 (defn visit-origin [] {:x 0  :y 0})
+
 (defn visit-yonder [] {:x 34 :y 19})
 
 (defn visited-origin? [board]
@@ -107,19 +108,43 @@
       (visit-yonder)
       (visit-origin))))
 
+; cell-owned-by-me? returns true if the cell
+; is owned by me (is equal to \0)
+(defn cell-owned-by-me? [cell] (= cell \0))
+
+; number-owned returns the number of cells
+; owned by the player in a given row
+(defn number-owned [row]
+  (count (filter cell-owned-by-me? row)))
+
+; partially-owned? returns true if at least one
+; cell in the row is owned by the player
+(defn partially-owned? [row] (some cell-owned-by-me? row))
+
+(defn max-full-edge-length [board]
+  (debug "the board")
+  (debug-board (filter partially-owned? board))
+  (debug "owned" (map number-owned (filter partially-owned? board)))
+  (debug "min" (map type (map number-owned (filter partially-owned? board))))
+  (min
+    (map number-owned (filter partially-owned? board)))
+  1)
+
+(defn target-edge-length [board]
+  (+ 1 (max-full-edge-length board)))
+
+(defn spiral-outwards [game board]
+  (let [targetEdgeLength (target-edge-length board)]
+    (debug "targetEdgeLength" targetEdgeLength)))
+
+; ........
+; ...0....
+; ........
+
 ; target-cell returns the cell that the player would
 ; be best served by moving towards
 (defn target-cell [game opponents board]
-  (if (not (is-board-looped? board))
-    (loop-board board)
-    (visit-origin)))
-  ; (debug "visited-origin" (visited-origin? board))
-  ; (debug "is-looped" (is-board-looped? board))
-  ; (if (not (visited-origin? board))
-  ;   (visit-origin)
-  ;   (if (not (visited-yonder? board))
-  ;     (visit-yonder)
-  ;     (visit-origin))))
+  (spiral-outwards game board))
 
 (defn -main [& args]
   (let [opponentCount (read-string (read-line))]
@@ -127,5 +152,5 @@
       (let [input (read-n-lines (number-of-lines opponentCount))
            [game opponents board] (parse-input input)
            cell   (target-cell game opponents board)]
-           (debug-board board)
+          ;  (debug-board board)
            (println (format "%s %s" (cell :x) (cell :y)))))))
