@@ -83,28 +83,28 @@
 ; go-down returns the cell just one down from
 ; the one passed in
 (defn go-down [game]
-  ; (debug "going-down")
+  (debug "going-down")
   { :x (:x game)
     :y (+ (:y game) 1)})
 
 ; go-left returns the cell just one left from
 ; the one passed in
 (defn go-left [game]
-  ; (debug "going-left")
+  (debug "going-left")
   { :x (- (:x game) 1)
     :y (:y game)})
 
 ; go-right returns the cell just one right from
 ; the one passed in
 (defn go-right [game]
-  ; (debug "going-right")
+  (debug "going-right")
   { :x (+ (:x game) 1)
     :y (:y game)})
 
 ; go-up returns the cell just one up from
 ; the one passed in
 (defn go-up [game]
-  ; (debug "going-up")
+  (debug "going-up")
   { :x (:x game)
     :y (- (:y game) 1)})
 
@@ -131,13 +131,49 @@
 (defn extract-column [n board]
   (map #(nth % n) board))
 
-(defn down-column [board]
+(defn to-columns [board]
+  (let [numCols (count (first board))]
+    (for [n (range numCols)]
+      (extract-column n board))))
+
+; made-a-square? returns true if we
+; made a square with even sides
+(defn made-a-square? [board]
+  (let [myRows                (filter partially-owned? board)
+        ownedCellsByRowCounts (map number-owned myRows)
+        myCols                (filter partially-owned? (to-columns board))
+        ownedCellsByColCounts (map number-owned myCols)]
+    (apply = (concat ownedCellsByRowCounts ownedCellsByColCounts))))
+
+; column-down tries to intelligently find the
+; board column in which we last went down, which
+; should be the right most board column we've ever
+; visited, unless we screwed up
+(defn column-down [board]
   (let [row (first (filter partially-owned? board))]
     (.lastIndexOf (seq row) \0)))
 
-(defn up-column [board]
+; column-up tries to intelligently find the
+; board column in which we last went up, which
+; should be the left most board column we've ever
+; visited, unless we screwed up
+(defn column-up [board]
   (let [row (first (filter partially-owned? board))]
     (.indexOf (seq row) \0)))
+
+; row-left tries to intelligently find the
+; board row in which we last went left, which
+; should be the downmost most board row we've ever
+; visited, unless we screwed up
+(defn row-left [board]
+  (.lastIndexOf (map partially-owned? board) true))
+
+; row-right tries to intelligently find the
+; board row in which we last went right, which
+; should be the uppermost most board row we've ever
+; visited, unless we screwed up
+(defn row-right [board]
+  (.indexOf (map partially-owned? board) true))
 
 ; edge-length-down calculates the current
 ; downward movement edge length
@@ -145,7 +181,7 @@
   (count
     (filter
       cell-owned-by-me?
-      (extract-column (down-column board) board))))
+      (extract-column (column-down board) board))))
 
 ; edge-length-right calculates the current
 ; rightward movement edge length
@@ -153,7 +189,15 @@
   (count
     (filter
       cell-owned-by-me?
-      (nth board (:y game)))))
+      (nth board (row-right board)))))
+
+; edge-length-left calculates the current
+; leftward movement edge length
+(defn edge-length-left [game board]
+  (count
+    (filter
+      cell-owned-by-me?
+      (nth board (row-left board)))))
 
 ; edge-length-up calculates the current
 ; upward movement edge length
@@ -161,7 +205,7 @@
   (count
     (filter
       cell-owned-by-me?
-      (extract-column (up-column board) board))))
+      (extract-column (column-up board) board))))
 
 (defn up-edge-length [])
 
@@ -169,10 +213,12 @@
   (< (edge-length-down game board) (+ 1 (target-edge-length board))))
 
 (defn going-left? [game board] true
-  (< (edge-length-right game board) (target-edge-length board)))
+  (< (edge-length-left game board) (target-edge-length board)))
 
 (defn going-right? [game board]
-  (< (edge-length-right game board) (target-edge-length board)))
+  (if (made-a-square? board)
+    false
+    (< (edge-length-right game board) (target-edge-length board))))
 
 (defn going-up? [game board]
   (< (edge-length-up game board) (target-edge-length board)))

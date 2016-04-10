@@ -28,7 +28,7 @@
           board ["....."
                  "..00."
                  "..00."]]
-      (is (= 2 (edge-length-up game board)))))
+      (is (= 2 (edge-length-down game board)))))
   )
 
 (deftest edge-length-right-test
@@ -133,7 +133,7 @@
                  "..00."
                  "..00."
                  "...0."]]
-      (is (going-left? game board))))
+      (is (= true (going-left? game board)))))
 
   (testing "When called with a normal 6th turn board state"
     (let [game  {:x 2, :y 3}
@@ -141,7 +141,7 @@
                  "..00."
                  "..00."
                  "..00."]]
-      (is (going-left? game board))))
+      (is (= true (going-left? game board)))))
 
   (testing "When called with a normal 7th turn board state"
     (let [game  {:x 1, :y 3}
@@ -149,7 +149,7 @@
                  "..00."
                  "..00."
                  ".000."]]
-      (is (not (going-left? game board)))))
+      (is (= false (going-left? game board)))))
 )
 
 (deftest going-right?-test
@@ -160,19 +160,19 @@
                  "..0.."]]
       (is (going-right? game board))))
 
-  (testing "When called with a normal 3rd turn board state"
-    (let [game  {:x 3, :y 1}
-          board ["....."
-                 "..00."
-                 "..0.."]]
-      (is (not (going-right? game board)))))
-
-  (testing "When called with a normal 4th turn board state"
-    (let [game  {:x 3, :y 2}
-          board ["....."
-                 "..00."
-                 "..00."]]
-      (is (not (going-right? game board)))))
+  ; (testing "When called with a normal 3rd turn board state"
+  ;   (let [game  {:x 3, :y 1}
+  ;         board ["....."
+  ;                "..00."
+  ;                "..0.."]]
+  ;     (is (not (going-right? game board)))))
+  ;
+  ; (testing "When called with a normal 4th turn board state"
+  ;   (let [game  {:x 3, :y 2}
+  ;         board ["....."
+  ;                "..00."
+  ;                "..00."]]
+  ;     (is (not (going-right? game board)))))
 )
 
 (deftest going-up?-test
@@ -198,6 +198,18 @@
       (is (not (going-up? game board)))))
 )
 
+(deftest made-a-square?-test
+  (testing "When called with a normal 1st round board state"
+    (is (= true (made-a-square? ["......."
+                                 "...0..."
+                                 "......."]))))
+
+  (testing "When called with a normal 2nd round board state"
+    (is (= false (made-a-square? ["......."
+                                  "...0..."
+                                  "...0..."]))))
+)
+
 (deftest max-full-edge-length-test
   (testing "When called with ['.........']"
     (is (= 0 (max-full-edge-length ["........."]))))
@@ -218,3 +230,12 @@
     (is (not (partially-owned? "...1....."))))
   (testing "When called with '.....0...'"
     (is (partially-owned? ".....0..."))))
+
+(deftest spiral-outwards-test
+  (testing "When called with a normal 3rd turn board state"
+    (let [game  {:x 3, :y 1}
+          board ["....."
+                 "..00."
+                 "..0.."]]
+      (is (= {:x 3, :y 2} (spiral-outwards game board)))))
+)
