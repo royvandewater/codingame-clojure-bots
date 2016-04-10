@@ -71,6 +71,14 @@
 (defn parse-input [input]
   [(parse-game input) (parse-opponents input) (parse-board input)])
 
+(defn extract-column [n board]
+  (map #(nth % n) board))
+
+(defn to-columns [board]
+  (let [numCols (count (first board))]
+    (for [n (range numCols)]
+      (extract-column n board))))
+
 (defn visited? [board x y]
   (let [row  (nth board y)
         cell (nth row x)]
@@ -83,28 +91,28 @@
 ; go-down returns the cell just one down from
 ; the one passed in
 (defn go-down [game]
-  (debug "going-down")
+  ; (debug "going-down")
   { :x (:x game)
     :y (+ (:y game) 1)})
 
 ; go-left returns the cell just one left from
 ; the one passed in
 (defn go-left [game]
-  (debug "going-left")
+  ; (debug "going-left")
   { :x (- (:x game) 1)
     :y (:y game)})
 
 ; go-right returns the cell just one right from
 ; the one passed in
 (defn go-right [game]
-  (debug "going-right")
+  ; (debug "going-right")
   { :x (+ (:x game) 1)
     :y (:y game)})
 
 ; go-up returns the cell just one up from
 ; the one passed in
 (defn go-up [game]
-  (debug "going-up")
+  ; (debug "going-up")
   { :x (:x game)
     :y (- (:y game) 1)})
 
@@ -118,23 +126,17 @@
 (defn partially-owned? [row] (some cell-owned-by-me? row))
 
 (defn max-full-edge-length [board]
-  (let [rowsOwnedByMe (filter partially-owned? board)]
+  (let [rowsOwnedByMe   (filter partially-owned? board)
+        colsOwnedByMe   (filter partially-owned? (to-columns board))
+        thingsOwnedByMe (concat rowsOwnedByMe colsOwnedByMe)]
     (cond
-      (empty? rowsOwnedByMe) 0
-      :else (apply min (map number-owned rowsOwnedByMe)))))
+      (empty? thingsOwnedByMe) 0
+      :else (apply min (map number-owned thingsOwnedByMe)))))
 
 (defn stay-here [game])
 
 (defn target-edge-length [board]
   (+ 1 (max-full-edge-length board)))
-
-(defn extract-column [n board]
-  (map #(nth % n) board))
-
-(defn to-columns [board]
-  (let [numCols (count (first board))]
-    (for [n (range numCols)]
-      (extract-column n board))))
 
 ; made-a-square? returns true if we
 ; made a square with even sides
@@ -177,7 +179,7 @@
 
 ; edge-length-down calculates the current
 ; downward movement edge length
-(defn edge-length-down [game board]
+(defn edge-length-down [board]
   (count
     (filter
       cell-owned-by-me?
@@ -185,7 +187,7 @@
 
 ; edge-length-right calculates the current
 ; rightward movement edge length
-(defn edge-length-right [game board]
+(defn edge-length-right [board]
   (count
     (filter
       cell-owned-by-me?
@@ -193,7 +195,7 @@
 
 ; edge-length-left calculates the current
 ; leftward movement edge length
-(defn edge-length-left [game board]
+(defn edge-length-left [board]
   (count
     (filter
       cell-owned-by-me?
@@ -201,35 +203,36 @@
 
 ; edge-length-up calculates the current
 ; upward movement edge length
-(defn edge-length-up [game board]
+(defn edge-length-up [board]
   (count
     (filter
       cell-owned-by-me?
       (extract-column (column-up board) board))))
 
-(defn up-edge-length [])
+(defn going-down? [board]
+  (< (edge-length-down board) (+ 1 (target-edge-length board))))
 
-(defn going-down? [game board]
-  (< (edge-length-down game board) (+ 1 (target-edge-length board))))
+(defn going-left? [board] true
+  (< (edge-length-left board) (target-edge-length board)))
 
-(defn going-left? [game board] true
-  (< (edge-length-left game board) (target-edge-length board)))
-
-(defn going-right? [game board]
+(defn going-right? [board]
   (if (made-a-square? board)
     false
-    (< (edge-length-right game board) (target-edge-length board))))
+    (< (edge-length-right board) (target-edge-length board))))
 
-(defn going-up? [game board]
-  (< (edge-length-up game board) (target-edge-length board)))
+(defn going-up? [board]
+  (cond
+    (= 1 (edge-length-up board)) true
+    (made-a-square? board)       false
+    :else (< (edge-length-up board) (target-edge-length board))))
 
 (defn spiral-outwards [game board]
   ; (debug-cell game)
   (cond
-    (going-up? game board) (go-up game)
-    (going-right? game board) (go-right game)
-    (going-down? game board) (go-down game)
-    (going-left? game board) (go-left)
+    (going-up? board) (go-up game)
+    (going-right? board) (go-right game)
+    (going-down? board) (go-down game)
+    (going-left? board) (go-left)
     :else (stay-here game)))
   ; (let [targetEdgeLength (target-edge-length board)]
   ;   (debug "targetEdgeLength" targetEdgeLength)
