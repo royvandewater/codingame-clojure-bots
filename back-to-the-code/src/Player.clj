@@ -3,249 +3,159 @@
 
 (require '[clojure.string :as str])
 
-; debug prints arguments to standard error
-(defn debug [& args]
+(defn debug
+  "prints arguments to standard error"
+  [& args]
   (binding [*out* *err*]
     (apply println args)))
 
-; debug-board prints a board out to standard error
-(defn debug-board [board]
+(defn debug-board
+  "prints a board out to standard error"
+  [board]
   (doall (map debug board)))
 
-; debug-cell prints a cell to standard error
-; in the format "{x: <x>, y: <y>}"
-(defn debug-cell [msg cell]
+(defn debug-cell
+  "prints a cell to standard error in the format '{x: <x>, y: <y>}'"
+  [msg cell]
   (debug msg (format "{x: %s, y: %s}" (:x cell) (:y cell))))
 
-(defn read-one-line [i]
+(defn read-one-line
+  "calls read line, throws away the arg"
+  [i]
   (read-line))
 
-(defn read-n-lines [n]
-  (doall (for [i (range 0 n)]
-    (read-one-line i))))
-  ; (doall (map read-one-line (range 0 n))))
+(defn read-n-lines
+  "reads n lines and returns them"
+  [n]
+  (doall (map read-one-line (range 0 n))))
 
-; number-of-lines assumes a board has:
-;   * 1 game state line
-;   * 1 player state line
-;   * n opponent state lines where n is opponentCount
-;   * 20 board state lines
-(defn number-of-lines [opponentCount]
+(defn number-of-lines
+  "returns the number of lines in a game board assuming:
+    * 1 game state line
+    * 1 player state line
+    * n opponent state lines where n is opponentCount
+    * 20 board state lines"
+  [opponentCount]
   (let [game      1
         player    1
         opponents opponentCount
         board     20]
     (+ game player opponents board)))
 
-; parse-board assumes the last 20 indexes of input
-; represent the board and returns them
-(defn parse-board [input]
+(defn parse-board
+  "assumes the last 20 indexes of input represent
+  the board and returns them"
+  [input]
   (take-last 20 input))
 
-; parse-game assumes the first 2 indexes of input
-; are metadata about the current game state and builds
-; a hash-map with the relevant data
-(defn parse-game [input]
-  (debug "parse-game" input)
+(defn parse-game
+  "assumes the first 2 indexes of input are
+  metadata about the current game state and
+  builds a hash-map with the relevant data"
+  [input]
   (let [round  (nth input 0)
         player (nth input 1)
         [x y backInTimeLeft] (str/split player #"\s")]
-  { :game-round        (read-string round)
-    :x                 (read-string x)
-    :y                 (read-string y)
-    :back-in-time-left (read-string backInTimeLeft)}))
-
-; parse-opponents assumes that whatever ain't the game
-; or the board must be the opponents. Returns an array
-; of hashmaps, each representing one opponent
-(defn parse-opponents [input]
-  (let [opponents (drop 3 (drop-last 20 input))]
-  (for [opponent opponents]
-    (let [[x y backInTimeLeft] (str/split opponent #"\s")]
-    { :x                 (read-string x)
+    { :game-round        (read-string round)
+      :x                 (read-string x)
       :y                 (read-string y)
-      :back-in-time-left (read-string backInTimeLeft)}))))
+      :back-in-time-left (read-string backInTimeLeft)}))
 
-; parse-input takes a sequence of strings and makes
-; a lot of assumptions about what they contain
-(defn parse-input [input]
+(defn parse-opponents
+  "assumes that whatever ain't the game or the board
+  must be the opponents. Returns an array of hashmaps,
+  each representing one opponent"
+  [input]
+  (let [opponents (drop 2 (drop-last 20 input))]
+    (for [opponent opponents]
+      (let [[x y backInTimeLeft] (str/split opponent #"\s")]
+        { :x                 (read-string x)
+          :y                 (read-string y)
+          :back-in-time-left (read-string backInTimeLeft)}))))
+
+; parse-input
+;
+(defn parse-input
+  "takes a sequence of strings and makes a lot of
+  assumptions about what they contain"
+  [input]
   [(parse-game input) (parse-opponents input) (parse-board input)])
 
-(defn extract-column [n board]
+(defn extract-column
+  "returns a list of characters representing the nth
+  column of the board"
+  [n board]
   (map #(nth % n) board))
 
-(defn to-columns [board]
+(defn to-columns
+  "returns a list of lists of characters representing
+  representing each column of the board"
+  [board]
   (let [numCols (count (first board))]
     (for [n (range numCols)]
       (extract-column n board))))
 
-(defn visited? [board x y]
+(defn cell-owned-by-me?
+  "returns true if the cell is equal to '0'"
+  [cell]
+  (= cell \0))
+
+(defn owned?
+  "returns true if the x and y coordinates are
+  owned by the player"
+  [board x y]
   (let [row  (nth board y)
         cell (nth row x)]
-        (= \0 cell)))
+        (cell-owned-by-me? cell)))
 
-; cell-owned-by-me? returns true if the cell
-; is owned by me (is equal to \0)
-(defn cell-owned-by-me? [cell] (= cell \0))
-
-; go-down returns the cell just one down from
-; the one passed in
-(defn go-down [game]
-  ; (debug "going-down")
+(defn go-down
+  "returns the cell just one down from the one passed in"
+  [game]
   { :x (:x game)
     :y (+ (:y game) 1)})
 
-; go-left returns the cell just one left from
-; the one passed in
-(defn go-left [game]
+(defn go-left
+  "returns the cell just one left from the one passed in"
+  [game]
   ; (debug "going-left")
   { :x (- (:x game) 1)
     :y (:y game)})
 
-; go-right returns the cell just one right from
-; the one passed in
-(defn go-right [game]
+(defn go-right
+  "returns the cell just one right from the one passed in"
+  [game]
   ; (debug "going-right")
   { :x (+ (:x game) 1)
     :y (:y game)})
 
-; go-up returns the cell just one up from
-; the one passed in
-(defn go-up [game]
+(defn go-up
+  "returns the cell just one up from the one passed in"
+  [game]
   ; (debug "going-up")
   { :x (:x game)
     :y (- (:y game) 1)})
 
-; number-owned returns the number of cells
-; owned by the player in a given row
-(defn number-owned [row]
+(defn number-owned
+  "returns the number of cells owned by the player
+  in a given row"
+  [row]
   (count (filter cell-owned-by-me? row)))
 
-; partially-owned? returns true if at least one
-; cell in the row is owned by the player
-(defn partially-owned? [row] (some cell-owned-by-me? row))
+(defn partially-owned?
+  "returns true if at least one cell in the row
+  is owned by the player"
+  [row]
+  (some cell-owned-by-me? row))
 
-(defn max-full-edge-length [board]
-  (let [rowsOwnedByMe   (filter partially-owned? board)
-        colsOwnedByMe   (filter partially-owned? (to-columns board))
-        thingsOwnedByMe (concat rowsOwnedByMe colsOwnedByMe)]
-    (cond
-      (empty? thingsOwnedByMe) 0
-      :else (apply min (map number-owned thingsOwnedByMe)))))
-
-(defn stay-here [game])
-
-(defn target-edge-length [board]
-  (+ 1 (max-full-edge-length board)))
-
-; made-a-square? returns true if we
-; made a square with even sides
-(defn made-a-square? [board]
-  (let [myRows                (filter partially-owned? board)
-        ownedCellsByRowCounts (map number-owned myRows)
-        myCols                (filter partially-owned? (to-columns board))
-        ownedCellsByColCounts (map number-owned myCols)]
-    (apply = (concat ownedCellsByRowCounts ownedCellsByColCounts))))
-
-; column-down tries to intelligently find the
-; board column in which we last went down, which
-; should be the right most board column we've ever
-; visited, unless we screwed up
-(defn column-down [board]
-  (let [row (first (filter partially-owned? board))]
-    (.lastIndexOf (seq row) \0)))
-
-; column-up tries to intelligently find the
-; board column in which we last went up, which
-; should be the left most board column we've ever
-; visited, unless we screwed up
-(defn column-up [board]
-  (let [row (first (filter partially-owned? board))]
-    (.indexOf (seq row) \0)))
-
-; row-left tries to intelligently find the
-; board row in which we last went left, which
-; should be the downmost most board row we've ever
-; visited, unless we screwed up
-(defn row-left [board]
-  (.lastIndexOf (map partially-owned? board) true))
-
-; row-right tries to intelligently find the
-; board row in which we last went right, which
-; should be the uppermost most board row we've ever
-; visited, unless we screwed up
-(defn row-right [board]
-  (.indexOf (map partially-owned? board) true))
-
-; edge-length-down calculates the current
-; downward movement edge length
-(defn edge-length-down [board]
-  (count
-    (filter
-      cell-owned-by-me?
-      (extract-column (column-down board) board))))
-
-; edge-length-right calculates the current
-; rightward movement edge length
-(defn edge-length-right [board]
-  (count
-    (filter
-      cell-owned-by-me?
-      (nth board (row-right board)))))
-
-; edge-length-left calculates the current
-; leftward movement edge length
-(defn edge-length-left [board]
-  (count
-    (filter
-      cell-owned-by-me?
-      (nth board (row-left board)))))
-
-; edge-length-up calculates the current
-; upward movement edge length
-(defn edge-length-up [board]
-  (count
-    (filter
-      cell-owned-by-me?
-      (extract-column (column-up board) board))))
-
-(defn going-down? [board]
-  (< (edge-length-down board) (+ 1 (target-edge-length board))))
-
-(defn going-left? [board] true
-  (< (edge-length-left board) (target-edge-length board)))
-
-(defn going-right? [board]
-  (if (made-a-square? board)
-    false
-    (< (edge-length-right board) (target-edge-length board))))
-
-(defn going-up? [board]
-  (cond
-    (= 1 (edge-length-up board)) true
-    (made-a-square? board)       false
-    :else (< (edge-length-up board) (target-edge-length board))))
-
-(defn spiral-outwards [game board]
-  ; (debug-cell game)
-  (cond
-    (going-up? board) (go-up game)
-    (going-right? board) (go-right game)
-    (going-down? board) (go-down game)
-    (going-left? board) (go-left)
-    :else (stay-here game)))
-  ; (let [targetEdgeLength (target-edge-length board)]
-  ;   (debug "targetEdgeLength" targetEdgeLength)
-  ;   (visit-origin)))
-
-; ........
-; ...0....
-; ........
-
-; target-cell returns the cell that the player would
-; be best served by moving towards
-(defn target-cell [game opponents board]
-  (spiral-outwards game board))
+(defn target-cell
+  "Returns a hashmap with the :x and :y coordinates of where
+  the player should move next"
+  [game opponents board]
+  (debug "game" game)
+  (debug "opponents" opponents)
+  (debug-board board)
+  {:x 0, :y 0}
+  )
 
 (defn -main [& args]
   (let [opponentCount (read-string (read-line))]
@@ -253,7 +163,5 @@
       (let [input (read-n-lines (number-of-lines opponentCount))
            [game opponents board] (parse-input input)
            cell   (target-cell game opponents board)]
-           (debug-cell "me" game)
-           (debug-cell "target" cell)
           ;  (println (format "%s %s" 4 3))))))
            (println (format "%s %s" (:x cell) (:y cell)))))))
