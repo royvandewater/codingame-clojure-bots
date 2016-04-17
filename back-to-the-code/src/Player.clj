@@ -147,15 +147,20 @@
   [row]
   (some cell-owned-by-me? row))
 
+(defn center-of-largest-free-square
+  "Returns the coordinates of the cell in the center
+  of the largest free square"
+  [board]
+  {
+    :x (int (/ (count board) 2))
+    :y (int (/ (count board) 2))
+  })
+
 (defn target-cell
   "Returns a hashmap with the :x and :y coordinates of where
   the player should move next"
   [game opponents board]
-  (debug "game" game)
-  (debug "opponents" opponents)
-  (debug-board board)
-  {:x 0, :y 0}
-  )
+  (center-of-largest-free-square board))
 
 (defn -main [& args]
   (let [opponentCount (read-string (read-line))]

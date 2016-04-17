@@ -8,6 +8,29 @@
   (testing "When called with '.'"
     (is (not (cell-owned-by-me? \.)))))
 
+(deftest center-of-largest-free-square-test
+  (testing "When called with an empty 1x1 board"
+    (let [board ["."]]
+      (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
+
+  (testing "When called with an empty 2x2 board"
+    (let [board [".."
+                 ".."]]
+      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+
+  (testing "When called with an empty 3x3 board"
+    (let [board ["..."
+                 "..."
+                 "..."]]
+      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+
+  ; (testing "When called with an 3x3 board with me in a corner"
+  ;   (let [board ["0.."
+  ;                "..."
+  ;                "..."]]
+  ;     (is (= {:x 2, :y 2} (center-of-largest-free-square board)))))
+ )
+
 (deftest go-down-test
   (testing "When called with 0,0"
     (is (= {:x 0, :y 1} (go-down {:x 0, :y 0}))))
