@@ -2,34 +2,71 @@
   (:require [clojure.test :refer :all]
             [Player :refer :all]))
 
+(deftest build-rectangle-free-test
+  (testing "When called with an 3x3 board with me in a corner, given the bottom right 2x2 square"
+    (let [board ["0.."
+                 "..."
+                 "..."]
+          rectangle-free? (build-rectangle-free board)]
+      (testing "given the resulting function the bottom right 2x2 square"
+        (is (= true (rectangle-free? {:x1 1, :y1 1, :x2 2, :y2 2}))))
+      (testing "given the resulting function the top left 2x2 square"
+        (is (= false (rectangle-free? {:x1 0, :y1 0, :x2 1, :y2 1}))))
+
+    )
+  )
+)
+
 (deftest cell-owned-by-me?-test
   (testing "When called with '0'"
     (is (cell-owned-by-me? \0)))
   (testing "When called with '.'"
     (is (not (cell-owned-by-me? \.)))))
 
-(deftest center-of-largest-free-square-test
-  (testing "When called with an empty 1x1 board"
-    (let [board ["."]]
-      (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
+; (deftest center-of-largest-free-square-test
+;   (testing "When called with an empty 1x1 board"
+;     (let [board ["."]]
+;       (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
+;
+;   (testing "When called with an empty 2x2 board"
+;     (let [board [".."
+;                  ".."]]
+;       (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+;
+;   (testing "When called with an empty 3x3 board"
+;     (let [board ["..."
+;                  "..."
+;                  "..."]]
+;       (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+;
+;   (testing "When called with an 3x3 board with me in a corner"
+;     (let [board ["0.."
+;                  "..."
+;                  "..."]]
+;       (is (= {:x 2, :y 2} (center-of-largest-free-square board)))))
+;  )
 
-  (testing "When called with an empty 2x2 board"
-    (let [board [".."
-                 ".."]]
-      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+(deftest center-of-square-test
+  (testing "When called with a top left 1x1 square"
+    (let [square {:x1 0, :y1 0, :x2 0, :y2 0}]
+      (is (= {:x 0, :y 0} (center-of-square square)))))
 
-  (testing "When called with an empty 3x3 board"
-    (let [board ["..."
-                 "..."
-                 "..."]]
-      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+  (testing "When called with a top left 2x2 square"
+    (let [square {:x1 0, :y1 0, :x2 1, :y2 1}]
+      (is (= {:x 0, :y 0} (center-of-square square)))))
 
-  ; (testing "When called with an 3x3 board with me in a corner"
-  ;   (let [board ["0.."
-  ;                "..."
-  ;                "..."]]
-  ;     (is (= {:x 2, :y 2} (center-of-largest-free-square board)))))
- )
+  (testing "When called with a top left 3x3 square"
+    (let [square {:x1 0, :y1 0, :x2 2, :y2 2}]
+      (is (= {:x 1, :y 1} (center-of-square square)))))
+
+  (testing "When called with a 1x1 square one unit right and down"
+    (let [square {:x1 1, :y1 1, :x2 1, :y2 1}]
+      (is (= {:x 1, :y 1} (center-of-square square)))))
+
+  (testing "When called with a 3x3 square two unit right and three down"
+    (let [square {:x1 2, :y1 3, :x2 4, :y2 5}]
+      (is (= {:x 3, :y 4} (center-of-square square)))))
+)
 
 (deftest go-down-test
   (testing "When called with 0,0"
@@ -54,6 +91,14 @@
     (is (= {:x 1, :y 0} (go-up {:x 1, :y 1}))))
   (testing "When called with 4,4"
     (is (= {:x 4, :y 3} (go-up {:x 4, :y 4})))))
+
+(deftest largest-free-square-test
+  (testing "When called with an 3x3 board with me in a corner"
+    (let [board ["0.."
+                 "..."
+                 "..."]]
+      (is (= {:x1 1, :y1 1, :x2 1, :y2 1} (largest-free-square board)))))
+)
 
 (deftest number-owned-test
   (testing "When called with '.....0....'"

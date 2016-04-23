@@ -108,6 +108,32 @@
         cell (nth row x)]
         (cell-owned-by-me? cell)))
 
+(defn cell-free?
+  "returns true if the cell is '.'"
+  [cell]
+  (= cell \.))
+
+(defn row-free?
+  "returns true if every cell in the row is a '.'"
+  [row]
+  (every? cell-free? row))
+
+(defn extract-board-subset
+  "returns the subset of the board indicated
+  by the rectangular coordinates"
+  [board rect]
+  (let [{:keys [x1 y1 x2 y2]} rect
+        relevantRows (drop x1 (take (+ x1 x2) board))]
+    (map #(drop y1 (take (+ y1 y2) %)) relevantRows)))
+
+(defn build-rectangle-free
+  "returns a predicate function that will determine if squares
+  on the board are free"
+  [board]
+  (fn [rectangle]
+    (let [subset (extract-board-subset board rectangle)]
+      (every? row-free? subset))))
+
 (defn go-down
   "returns the cell just one down from the one passed in"
   [game]
@@ -147,14 +173,31 @@
   [row]
   (some cell-owned-by-me? row))
 
+(defn center-of-square
+  "Returns a hash containing the x and y
+  coordinates of the center of the square passed in"
+  [{:keys [x1, x2, y1, y2]}]
+  (let [halfWidth  (/ (- x2 x1) 2)
+        halfHeight (/ (- y2 y1) 2)]
+    {
+      :x (int (+ x1 halfWidth))
+      :y (int (+ y1 halfHeight))
+    }))
+
+(defn largest-free-square
+  "Returns a hash containing the x1, y1, x2, y2 coordinates
+  that define the largest un-owned square on the board"
+  [board])
+  ; (let [square-free? (build-square-free? board)
+  ;       freeSquares (filter square-free? (all-squares board))]
+  ;   (max-by square-area freeSquares)))
+
 (defn center-of-largest-free-square
   "Returns the coordinates of the cell in the center
   of the largest free square"
   [board]
-  {
-    :x (int (/ (count board) 2))
-    :y (int (/ (count board) 2))
-  })
+  (center-of-square
+    (largest-free-square board)))
 
 (defn target-cell
   "Returns a hashmap with the :x and :y coordinates of where
