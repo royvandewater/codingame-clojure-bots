@@ -25,6 +25,11 @@
       (is (in? squares {:x1 1, :y1 0, :x2 1, :y2 0}))
       (is (in? squares {:x1 1, :y1 1, :x2 1, :y2 1}))
       (is (in? squares {:x1 0, :y1 0, :x2 1, :y2 1}))))
+
+  (testing "When called with a 35x20 board"
+    (let [board (repeat 20 "...................................")
+          squares (all-squares board)]
+      (is (= 6020 (count squares)))))
 )
 
 (deftest cell-owned-by-me?-test
@@ -54,6 +59,11 @@
                  "..."
                  "..."]]
       (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+
+  (testing "When called with a 35x20 board"
+    (let [board (repeat 20 "...................................")]
+      (println "\ncenter-of-largest-free-square")
+      (is (= {:x 24, :y 9} (time (center-of-largest-free-square board))))))
  )
 
 (deftest center-of-square-test
@@ -108,6 +118,11 @@
                  "..."
                  "..."]]
       (is (= {:x1 1, :y1 1, :x2 2, :y2 2} (largest-free-square board)))))
+
+  (testing "When called with a 35x20 board"
+    (let [board (repeat 20 "...................................")]
+      (println "\nlargest-free-square")
+      (is (= {:x1 15, :y1 0, :x2 34, :y2 19} (time (largest-free-square board))))))
 )
 
 (deftest max-by-test
