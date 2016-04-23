@@ -2,49 +2,59 @@
   (:require [clojure.test :refer :all]
             [Player :refer :all]))
 
-(deftest build-rectangle-free-test
-  (testing "When called with an 3x3 board with me in a corner, given the bottom right 2x2 square"
-    (let [board ["0.."
-                 "..."
-                 "..."]
-          rectangle-free? (build-rectangle-free board)]
-      (testing "given the resulting function the bottom right 2x2 square"
-        (is (= true (rectangle-free? {:x1 1, :y1 1, :x2 2, :y2 2}))))
-      (testing "given the resulting function the top left 2x2 square"
-        (is (= false (rectangle-free? {:x1 0, :y1 0, :x2 1, :y2 1}))))
+(deftest all-squares-test
+  (testing "When called with a 1x1 board"
+    (let [board ["."]
+          squares (all-squares board)]
+      (is (in? squares {:x1 0, :y1 0, :x2 0, :y2 0}))))
 
-    )
-  )
+  (testing "When called with a 1x2 board"
+    (let [board ["."
+                 "."]
+          squares (all-squares board)]
+      (is (in? squares {:x1 0, :y1 0, :x2 0, :y2 0}))
+      (is (in? squares {:x1 0, :y1 1, :x2 0, :y2 1}))
+      (is (not (in? squares {:x1 0, :y1 1, :x2 0, :y2 0})))))
+
+  (testing "When called with a 2x2 board"
+    (let [board [".."
+                 ".."]
+          squares (all-squares board)]
+      (is (in? squares {:x1 0, :y1 0, :x2 0, :y2 0}))
+      (is (in? squares {:x1 0, :y1 1, :x2 0, :y2 1}))
+      (is (in? squares {:x1 1, :y1 0, :x2 1, :y2 0}))
+      (is (in? squares {:x1 1, :y1 1, :x2 1, :y2 1}))
+      (is (in? squares {:x1 0, :y1 0, :x2 1, :y2 1}))))
 )
 
 (deftest cell-owned-by-me?-test
   (testing "When called with '0'"
-    (is (cell-owned-by-me? \0)))
+    (is (= true  (cell-owned-by-me? \0))))
   (testing "When called with '.'"
-    (is (not (cell-owned-by-me? \.)))))
+    (is (= false (cell-owned-by-me? \.)))))
 
-; (deftest center-of-largest-free-square-test
-;   (testing "When called with an empty 1x1 board"
-;     (let [board ["."]]
-;       (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
-;
-;   (testing "When called with an empty 2x2 board"
-;     (let [board [".."
-;                  ".."]]
-;       (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
-;
-;   (testing "When called with an empty 3x3 board"
-;     (let [board ["..."
-;                  "..."
-;                  "..."]]
-;       (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
-;
-;   (testing "When called with an 3x3 board with me in a corner"
-;     (let [board ["0.."
-;                  "..."
-;                  "..."]]
-;       (is (= {:x 2, :y 2} (center-of-largest-free-square board)))))
-;  )
+(deftest center-of-largest-free-square-test
+  (testing "When called with an empty 1x1 board"
+    (let [board ["."]]
+      (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
+
+  (testing "When called with an empty 2x2 board"
+    (let [board [".."
+                 ".."]]
+      (is (= {:x 0, :y 0} (center-of-largest-free-square board)))))
+
+  (testing "When called with an empty 3x3 board"
+    (let [board ["..."
+                 "..."
+                 "..."]]
+      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+
+  (testing "When called with an 3x3 board with me in a corner"
+    (let [board ["0.."
+                 "..."
+                 "..."]]
+      (is (= {:x 1, :y 1} (center-of-largest-free-square board)))))
+ )
 
 (deftest center-of-square-test
   (testing "When called with a top left 1x1 square"
@@ -97,7 +107,15 @@
     (let [board ["0.."
                  "..."
                  "..."]]
-      (is (= {:x1 1, :y1 1, :x2 1, :y2 1} (largest-free-square board)))))
+      (is (= {:x1 1, :y1 1, :x2 2, :y2 2} (largest-free-square board)))))
+)
+
+(deftest max-by-test
+  (testing "When called with a key"
+    (is (= {:a 1, :b 2} (max-by :a [{:a 1, :b 2},{:a 0, :b 3}]))))
+
+  (testing "When called with a lambda"
+    (is (= {:a 0, :b 4} (max-by #(reduce + (vals %)) [{:a 1, :b 2},{:a 0, :b 4}]))))
 )
 
 (deftest number-owned-test
@@ -113,3 +131,20 @@
     (is (not (partially-owned? "...1....."))))
   (testing "When called with '.....0...'"
     (is (partially-owned? ".....0..."))))
+
+(deftest rectangle-area-test
+  (testing "When called with a top left 1x1 square"
+    (let [rectangle {:x1 0, :y1 0, :x2 0, :y2 0}]
+      (is (= 1 (rectangle-area rectangle)))))
+  )
+
+(deftest rectangle-free?-test
+  (testing "When called with an 3x3 board with me in a corner"
+    (let [board ["0.."
+                 "..."
+                 "..."]]
+      (testing "given the resulting function the bottom right 2x2 square"
+        (is (= true (rectangle-free? board {:x1 1, :y1 1, :x2 2, :y2 2}))))
+      (testing "given the resulting function the top left 2x2 square"
+        (is (= false (rectangle-free? board {:x1 0, :y1 0, :x2 1, :y2 1}))))))
+)

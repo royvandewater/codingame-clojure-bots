@@ -19,6 +19,18 @@
   [msg cell]
   (debug msg (format "{x: %s, y: %s}" (:x cell) (:y cell))))
 
+(defn in?
+  "returns true if the element is in the collection"
+  [collection elem]
+  (some #(= elem %) collection))
+
+(defn max-by
+  "returns the element in the collection with the greatest
+  values as defined by the result of passing that element
+  to f"
+  [f coll]
+  (reduce #(if (> (f %1) (f %2)) %1 %2) coll))
+
 (defn read-one-line
   "calls read line, throws away the arg"
   [i]
@@ -126,13 +138,33 @@
         relevantRows (drop x1 (take (+ x1 x2) board))]
     (map #(drop y1 (take (+ y1 y2) %)) relevantRows)))
 
-(defn build-rectangle-free
-  "returns a predicate function that will determine if squares
-  on the board are free"
+(defn is-square?
+  "returns true if the rectangle is a square"
+  [{:keys [x1, x2, y1, y2]}]
+  (let [width  (- x2 x1)
+        height (- y2 y1)]
+    (and
+      (<= 0 height)
+      (<= 0 width)
+      (= height width))))
+
+(defn all-squares
+  "returns a lazy sequence of all possible square combinations
+  in the board"
   [board]
-  (fn [rectangle]
-    (let [subset (extract-board-subset board rectangle)]
-      (every? row-free? subset))))
+  (filter is-square?
+    (let [numRows (count board)
+          numCols (count (first board))]
+      (for [x1 (range numCols), y1 (range numRows)
+            x2 (range numCols), y2 (range numRows)]
+        {:x1 x1, :y1 y1, :x2 x2, :y2 y2}))))
+
+(defn rectangle-free?
+  "returns true if the described rectangle contains no
+  non '.' squares within the board"
+  [board rectangle]
+  (let [subset (extract-board-subset board rectangle)]
+    (every? row-free? subset)))
 
 (defn go-down
   "returns the cell just one down from the one passed in"
@@ -184,13 +216,21 @@
       :y (int (+ y1 halfHeight))
     }))
 
+(defn rectangle-area
+  "returns the area of the square"
+  [{:keys [x1 y1 x2 y2]}]
+  (let [width  (inc (- x2 x1))
+        height (inc (- y2 y1))]
+    (* width height)))
+
 (defn largest-free-square
   "Returns a hash containing the x1, y1, x2, y2 coordinates
   that define the largest un-owned square on the board"
-  [board])
-  ; (let [square-free? (build-square-free? board)
-  ;       freeSquares (filter square-free? (all-squares board))]
-  ;   (max-by square-area freeSquares)))
+  [board]
+  (let [square-free? (partial rectangle-free? board)
+        freeSquares (filter square-free? (all-squares board))]
+    (max-by rectangle-area freeSquares))
+)
 
 (defn center-of-largest-free-square
   "Returns the coordinates of the cell in the center
@@ -211,5 +251,4 @@
       (let [input (read-n-lines (number-of-lines opponentCount))
            [game opponents board] (parse-input input)
            cell   (target-cell game opponents board)]
-          ;  (println (format "%s %s" 4 3))))))
            (println (format "%s %s" (:x cell) (:y cell)))))))
