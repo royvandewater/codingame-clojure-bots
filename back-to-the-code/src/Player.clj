@@ -93,6 +93,16 @@
   [input]
   [(parse-game input) (parse-opponents input) (parse-board input)])
 
+(defn board-height
+  "returns the height of the board"
+  [board]
+  (count board))
+
+(defn board-width
+  "returns the width of the board"
+  [board]
+  (count (first board)))
+
 (defn extract-column
   "returns a list of characters representing the nth
   column of the board"
@@ -112,6 +122,19 @@
   [cell]
   (= cell \0))
 
+(defn extract-board-subset
+  "returns the subset of the board indicated
+  by the rectangular coordinates"
+  [board rect]
+  (let [{:keys [x1 y1 x2 y2]} rect
+        relevantRows (drop x1 (take (+ x1 x2) board))]
+    (map #(drop y1 (take (+ y1 y2) %)) relevantRows)))
+
+(defn extract-cell
+  "returns the rune of the cell at the coordinates"
+  [board {:keys [x y]}]
+  (nth (nth board y) x))
+
 (defn owned?
   "returns true if the x and y coordinates are
   owned by the player"
@@ -125,18 +148,16 @@
   [cell]
   (= cell \.))
 
+(defn origin-free?
+  "returns true if the cell at the given coordinates
+  is '.'"
+  [board origin]
+  (cell-free? (extract-cell board origin)))
+
 (defn row-free?
   "returns true if every cell in the row is a '.'"
   [row]
   (every? cell-free? row))
-
-(defn extract-board-subset
-  "returns the subset of the board indicated
-  by the rectangular coordinates"
-  [board rect]
-  (let [{:keys [x1 y1 x2 y2]} rect
-        relevantRows (drop x1 (take (+ x1 x2) board))]
-    (map #(drop y1 (take (+ y1 y2) %)) relevantRows)))
 
 (defn is-square?
   "returns true if the rectangle is a square"
@@ -160,11 +181,15 @@
         {:x1 x1, :y1 y1, :x2 x2, :y2 y2}))))
 
 (defn rectangle-free?
-  "returns true if the described rectangle contains no
-  non '.' squares within the board"
+  "returns true if the described rectangle is completely
+  inside the board and contains no non '.' squares within"
   [board rectangle]
-  (let [subset (extract-board-subset board rectangle)]
-    (every? row-free? subset)))
+  (cond
+    (<= (board-width board)  (:x2 rectangle)) false
+    (<= (board-height board) (:y2 rectangle)) false
+    :else
+      (let [subset (extract-board-subset board rectangle)]
+        (every? row-free? subset))))
 
 (defn go-down
   "returns the cell just one down from the one passed in"
@@ -216,21 +241,70 @@
       :y (int (+ y1 halfHeight))
     }))
 
+(defn rectangle-height
+  "returns the height of the rectangle"
+  [{:keys [y1 y2]}]
+  (int (- y2 y1)))
+
+(defn rectangle-width
+  "returns the width of the rectangle"
+  [{:keys [x1 x2]}]
+  (int (- x2 x1)))
+
 (defn rectangle-area
-  "returns the area of the square"
-  [{:keys [x1 y1 x2 y2]}]
-  (let [width  (inc (- x2 x1))
-        height (inc (- y2 y1))]
-    (* width height)))
+  "returns the area of the rectangle"
+  [rectangle]
+  (*
+    (rectangle-width rectangle)
+    (rectangle-height rectangle)))
+
+(defn next-origin
+  "returns the next origin on the board, nil if no more
+  origins exist"
+  [board {:keys [x y]}]
+  (cond
+    (< (inc x) (board-width board))  {:x (inc x), :y y}
+    (< (inc y) (board-height board)) {:x x, :y (inc y)}
+    :else nil))
+
+(defn first-free-origin
+  "returns the first free point on the board"
+  [board]
+  (loop [origin {:x 0, :y 0}]
+    (cond
+      (nil? origin) nil
+      (origin-free? board origin) origin
+      :else (recur (next-origin board origin)))))
+
+(defn origin-to-square
+  "generates a 1x1 square for the given coordinates"
+  [{:keys [x y]}]
+  {:x1 x, :y1 y, :x2 x, :y2 y})
+
+(defn larger-free-square-for-origin
+  "return a larger free square for the same origin. Returns
+  nil if no bigger squares exist"
+  [board origin square]
+  (let [{:keys [x1 y1 x2 y2]} square
+        largerSquare {:x1 x1, :y1 y1, :x2 (inc x2), :y2 (inc y2)}]
+    (if (rectangle-free? board largerSquare)
+      largerSquare)))
 
 (defn largest-free-square
   "Returns a hash containing the x1, y1, x2, y2 coordinates
   that define the largest un-owned square on the board"
   [board]
-  (let [square-free? (partial rectangle-free? board)
-        freeSquares (filter square-free? (all-squares board))]
-    (max-by rectangle-area freeSquares))
-)
+  ; (println "largest-free-square")
+  (loop [origin (first-free-origin board)
+         square (origin-to-square origin)]
+    (let [largerSquare (larger-free-square-for-origin board origin square)
+          nextOrigin   (next-origin board origin)]
+      ; (println "largerSquare" largerSquare)
+      ; (println "nextOrigin" nextOrigin)
+      (cond
+        (some? largerSquare) (recur origin largerSquare)
+        (some? nextOrigin)   (recur nextOrigin square)
+        :else square))))
 
 (defn center-of-largest-free-square
   "Returns the coordinates of the cell in the center
