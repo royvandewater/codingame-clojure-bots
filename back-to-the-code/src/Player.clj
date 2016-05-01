@@ -19,6 +19,17 @@
   [msg cell]
   (debug msg (format "{x: %s, y: %s}" (:x cell) (:y cell))))
 
+(defn print-board
+  "prints a board out to standard out"
+  [board]
+  (doall (map println board)))
+
+(defn print-hash
+  "print a hash out nice"
+  [hash]
+  (doall (for [key (keys hash)]
+    (println key (get hash key)))))
+
 (defn in?
   "returns true if the element is in the collection"
   [collection elem]
@@ -122,13 +133,18 @@
   [cell]
   (= cell \0))
 
+(defn subsequence
+  "returns a subsequence of the on passed in"
+  [sequence start end]
+  (drop start (take end sequence)))
+
 (defn extract-board-subset
   "returns the subset of the board indicated
   by the rectangular coordinates"
   [board rect]
   (let [{:keys [x1 y1 x2 y2]} rect
-        relevantRows (drop x1 (take (+ x1 x2) board))]
-    (map #(drop y1 (take (+ y1 y2) %)) relevantRows)))
+        relevantRows (subsequence board y1 y2)]
+    (map #(subs % x1 x2) relevantRows)))
 
 (defn extract-cell
   "returns the rune of the cell at the coordinates"
@@ -244,12 +260,12 @@
 (defn rectangle-height
   "returns the height of the rectangle"
   [{:keys [y1 y2]}]
-  (int (- y2 y1)))
+  (int (- (inc y2) y1)))
 
 (defn rectangle-width
   "returns the width of the rectangle"
   [{:keys [x1 x2]}]
-  (int (- x2 x1)))
+  (int (- (inc x2) x1)))
 
 (defn rectangle-area
   "returns the area of the rectangle"
@@ -264,7 +280,7 @@
   [board {:keys [x y]}]
   (cond
     (< (inc x) (board-width board))  {:x (inc x), :y y}
-    (< (inc y) (board-height board)) {:x x, :y (inc y)}
+    (< (inc y) (board-height board)) {:x 0, :y (inc y)}
     :else nil))
 
 (defn first-free-origin
@@ -285,8 +301,10 @@
   "return a larger free square for the same origin. Returns
   nil if no bigger squares exist"
   [board origin square]
-  (let [{:keys [x1 y1 x2 y2]} square
-        largerSquare {:x1 x1, :y1 y1, :x2 (inc x2), :y2 (inc y2)}]
+  (let [{:keys [x y]} origin
+        height (rectangle-height square)
+        width  (rectangle-width square)
+        largerSquare {:x1 x, :y1 y, :x2 (+ x width), :y2 (+ y height)}]
     (if (rectangle-free? board largerSquare)
       largerSquare)))
 
@@ -294,13 +312,10 @@
   "Returns a hash containing the x1, y1, x2, y2 coordinates
   that define the largest un-owned square on the board"
   [board]
-  ; (println "largest-free-square")
   (loop [origin (first-free-origin board)
          square (origin-to-square origin)]
     (let [largerSquare (larger-free-square-for-origin board origin square)
           nextOrigin   (next-origin board origin)]
-      ; (println "largerSquare" largerSquare)
-      ; (println "nextOrigin" nextOrigin)
       (cond
         (some? largerSquare) (recur origin largerSquare)
         (some? nextOrigin)   (recur nextOrigin square)
